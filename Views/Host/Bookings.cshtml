@@ -1,0 +1,51 @@
+@model List<Booking>
+@{ ViewData["Title"] = "Booking Requests"; }
+@{
+    var pending = Model.Where(b => b.Status == BookingStatus.Pending).ToList();
+    var others = Model.Where(b => b.Status != BookingStatus.Pending).ToList();
+}
+<h2 class="h5">Pending requests (@pending.Count)</h2>
+@if (!pending.Any()) { <p class="text-muted">No pending requests.</p> }
+@foreach (var b in pending)
+{
+    <div class="sb-panel mb-2 d-flex flex-wrap gap-3 align-items-center">
+        <div class="flex-grow-1">
+            <div class="fw-semibold">@b.Property.Title</div>
+            <div class="small">@b.Guest.FullName &middot; @b.NumberOfGuests guest@(b.NumberOfGuests > 1 ? "s" : "") &middot; @b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy") (@b.Nights nights)</div>
+            <div class="small text-muted">Total @UiHelpers.Money(b.TotalPrice) &middot; payment @(b.Payment?.Status.ToString() ?? "n/a")</div>
+        </div>
+        <a class="btn btn-outline-secondary btn-sm" asp-controller="Messages" asp-action="Compose" asp-route-to="@b.GuestId"><i class="bi bi-chat-dots"></i></a>
+        <form asp-action="ApproveBooking" asp-route-id="@b.Id" method="post"><button class="btn btn-success btn-sm" type="submit"><i class="bi bi-check-lg"></i> Approve</button></form>
+        <form asp-action="RejectBooking" asp-route-id="@b.Id" method="post" onsubmit="return confirm('Reject this booking and refund the guest?');"><button class="btn btn-danger btn-sm" type="submit"><i class="bi bi-x-lg"></i> Reject</button></form>
+    </div>
+}
+
+<h2 class="h5 mt-4">All other bookings</h2>
+<div class="sb-panel">
+    <table class="table table-sm mb-0">
+        <thead><tr><th>Guest</th><th>Property</th><th>Dates</th><th>Total</th><th>Status</th><th>Check-in</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var b in others)
+        {
+            <tr>
+                <td>@b.Guest.FullName</td><td>@b.Property.Title</td>
+                <td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM")</td>
+                <td>@UiHelpers.Money(b.TotalPrice)</td>
+                <td><span class="badge @UiHelpers.BadgeClass(b.Status.ToString())">@b.Status</span></td>
+                <td>@(b.GuestCheckIn?.Status.ToString() ?? "-")</td>
+                <td class="text-end">
+                    @if (b.Status == BookingStatus.CheckedIn)
+                    {
+                        <form asp-action="CompleteBooking" asp-route-id="@b.Id" method="post"><button class="btn btn-outline-secondary btn-sm" type="submit">Mark completed</button></form>
+                    }
+                    else if (b.GuestCheckIn?.Status == CheckInStatus.DocumentSubmitted)
+                    {
+                        <a class="btn btn-outline-sb btn-sm" asp-action="Documents">Verify document</a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (!others.Any()) { <tr><td colspan="7" class="text-muted">Nothing here yet.</td></tr> }
+        </tbody>
+    </table>
+</div>

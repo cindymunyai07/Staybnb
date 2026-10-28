@@ -1,0 +1,20 @@
+@model List<ConversationItem>
+@{ ViewData["Title"] = "Messages"; }
+<div class="d-flex justify-content-between mb-3">
+    <h1 class="h4 mb-0">Inbox</h1>
+    @if (User.IsStaff()) { <a class="btn btn-sb btn-sm" asp-action="Compose"><i class="bi bi-pencil-square"></i> New message</a> }
+</div>
+<div class="sb-panel p-0">
+    @foreach (var c in Model)
+    {
+        <a class="sb-notif @(c.Unread > 0 ? "unread" : "")" asp-action="Thread" asp-route-id="@c.Other.Id">
+            <div class="d-flex justify-content-between">
+                <strong>@c.Other.FullName</strong>
+                <span class="small text-muted">@UiHelpers.TimeAgo(c.Last.Timestamp)</span>
+            </div>
+            <div class="small text-muted text-truncate">@(c.Last.SenderId == User.GetUserId() ? "You: " : "")@c.Last.Content</div>
+            @if (c.Unread > 0) { <span class="badge bg-danger">@c.Unread new</span> }
+        </a>
+    }
+    @if (!Model.Any()) { <div class="p-4 text-muted">No conversations yet. Use a "Message" button on a property or booking to start one.</div> }
+</div>

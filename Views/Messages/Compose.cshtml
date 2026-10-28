@@ -1,0 +1,25 @@
+@model ComposeViewModel
+@{ ViewData["Title"] = "New message"; }
+<div class="row"><div class="col-lg-7"><div class="sb-panel">
+    <h1 class="h5">New message</h1>
+    <form asp-action="Send" method="post">
+        @if (Model.Other != null)
+        {
+            <input type="hidden" name="ReceiverId" value="@Model.Other.Id" />
+            <p>To: <strong>@Model.Other.FullName</strong></p>
+        }
+        else
+        {
+            <div class="mb-3">
+                <label class="form-label">To</label>
+                <select name="ReceiverId" class="form-select" required>
+                    <option value="">Choose a user...</option>
+                    @foreach (var u in Model.Recipients) { <option value="@u.Id" selected="@(u.Id == Model.ReceiverId)">@u.FullName (@u.Email)</option> }
+                </select>
+            </div>
+        }
+        <div class="mb-3"><label class="form-label">Message</label><textarea name="Content" class="form-control" rows="4" maxlength="2000" required></textarea></div>
+        <button class="btn btn-sb" type="submit">Send</button>
+        <a class="btn btn-outline-secondary" asp-action="Inbox">Cancel</a>
+    </form>
+</div></div></div>

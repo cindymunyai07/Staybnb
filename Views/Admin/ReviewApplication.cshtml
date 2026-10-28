@@ -1,0 +1,40 @@
+@model HostApplication
+@{ ViewData["Title"] = "Review application"; var p = Model.Property; }
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="sb-panel">
+            <div class="d-flex justify-content-between">
+                <h2 class="h5">@p.Title</h2>
+                <span class="badge @UiHelpers.BadgeClass(Model.Status.ToString()) fs-6">@Model.Status</span>
+            </div>
+            <div class="text-muted small mb-3">@p.PropertyType &middot; @p.Address, @p.City &middot; @UiHelpers.Money(p.PricePerNight) / night &middot; cleaning @UiHelpers.Money(p.CleaningFee) &middot; @p.MaxGuests guests, @p.Bedrooms bedrooms, @p.Beds beds, @p.Bathrooms baths</div>
+            <p style="white-space:pre-line">@p.Description</p>
+            <div class="mb-3">@foreach (var a in p.Amenities) { <span class="badge bg-light text-dark border me-1"><i class="bi @a.IconClass"></i> @a.Name</span> }</div>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var img in p.Images) { <a href="@img.ImageUrl" target="_blank"><img class="sb-thumb" style="width:150px;height:110px" src="@img.ImageUrl" alt="" /></a> }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="sb-panel mb-3">
+            <h3 class="h6">Applicant</h3>
+            <div>@Model.ApplicationUser.FullName</div><div class="small text-muted">@Model.ApplicationUser.Email</div>
+            <div class="small text-muted">Applied @Model.AppliedAt.ToString("dd MMM yyyy HH:mm")</div>
+        </div>
+        @if (Model.Status == ApplicationStatus.Pending)
+        {
+            <div class="sb-panel">
+                <form asp-action="ApproveApplication" asp-route-id="@Model.Id" method="post" class="mb-3">
+                    <button class="btn btn-success w-100" type="submit"><i class="bi bi-check-lg"></i> Approve &amp; make Host</button>
+                    <div class="form-text">Adds the Host role and removes the Guest role.</div>
+                </form>
+                <form asp-action="RejectApplication" asp-route-id="@Model.Id" method="post">
+                    <textarea name="reason" class="form-control mb-2" rows="2" maxlength="500" placeholder="Reason for rejection"></textarea>
+                    <button class="btn btn-danger w-100" type="submit"><i class="bi bi-x-lg"></i> Reject</button>
+                </form>
+            </div>
+        }
+        else if (Model.Status == ApplicationStatus.Rejected) { <div class="alert alert-danger">Rejected: @Model.RejectionReason</div> }
+        <a class="btn btn-link" asp-action="Applications">&larr; Back</a>
+    </div>
+</div>

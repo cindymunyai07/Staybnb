@@ -1,0 +1,24 @@
+@model PropertyFormViewModel
+@{
+    var isHost = User.IsInRole(AppRoles.Host);
+    ViewData["Title"] = isHost ? "Add a new property" : "Become a Host";
+    ViewData["RequireImages"] = true;
+}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="sb-panel">
+            <h1 class="h4">@(isHost ? "List another property" : "Tell us about your place")</h1>
+            <p class="text-muted">
+                @(isHost ? "Your new property will be reviewed by an admin before it appears to guests."
+                         : "An admin will review your application. Once approved you become a Host and your account switches to the Host dashboard.")
+            </p>
+            <form asp-controller="HostApplication" asp-action="Create" method="post" enctype="multipart/form-data">
+                <partial name="_PropertyFields" model="Model" view-data="ViewData" />
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-sb px-4">Submit application</button>
+                    <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Index">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

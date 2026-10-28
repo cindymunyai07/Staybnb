@@ -1,0 +1,26 @@
+@model List<HostApplication>
+@{ ViewData["Title"] = "Host application status"; var isHost = User.IsInRole(AppRoles.Host); }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Host application status</h1>
+    @if (isHost || !Model.Any(a => a.Status == ApplicationStatus.Pending))
+    {
+        <a class="btn btn-sb" asp-action="Create"><i class="bi bi-plus-lg"></i> @(isHost ? "Add property" : "Apply to host")</a>
+    }
+</div>
+@if (!Model.Any())
+{
+    <p class="text-muted">You have not applied yet.</p>
+}
+@foreach (var a in Model)
+{
+    <div class="sb-panel mb-3 d-flex gap-3 align-items-center">
+        <img class="sb-thumb" src="@(a.Property.Images.FirstOrDefault()?.ImageUrl ?? UiHelpers.Placeholder)" alt="" />
+        <div class="flex-grow-1">
+            <div class="fw-semibold">@a.Property.Title</div>
+            <div class="small text-muted">@a.Property.City &middot; @UiHelpers.Money(a.Property.PricePerNight) / night &middot; applied @a.AppliedAt.ToString("dd MMM yyyy")</div>
+            @if (a.Status == ApplicationStatus.Rejected) { <div class="small text-danger">Reason: @a.RejectionReason</div> }
+            @if (a.Status == ApplicationStatus.Pending) { <div class="small text-muted">Under review by an admin.</div> }
+        </div>
+        <span class="badge @UiHelpers.BadgeClass(a.Status.ToString()) fs-6">@a.Status</span>
+    </div>
+}

@@ -1,0 +1,27 @@
+@model List<HostApplication>
+@{ ViewData["Title"] = "Host Requests"; ApplicationStatus? current = ViewBag.Status; }
+<div class="mb-3 d-flex gap-2">
+    <a class="btn btn-sm @(current == null ? "btn-sb" : "btn-outline-secondary")" asp-action="Applications">All</a>
+    @foreach (var s in Enum.GetValues<ApplicationStatus>())
+    {
+        <a class="btn btn-sm @(current == s ? "btn-sb" : "btn-outline-secondary")" asp-action="Applications" asp-route-status="@s">@s</a>
+    }
+</div>
+<div class="sb-panel">
+    <table class="table mb-0">
+        <thead><tr><th>Applicant</th><th>Property</th><th>Applied</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td>@a.ApplicationUser.FullName<div class="small text-muted">@a.ApplicationUser.Email</div></td>
+                <td><div class="d-flex gap-2 align-items-center"><img class="sb-thumb" style="width:56px;height:42px" src="@(a.Property.Images.FirstOrDefault()?.ImageUrl ?? UiHelpers.Placeholder)" alt="" />@a.Property.Title</div></td>
+                <td>@a.AppliedAt.ToString("yyyy-MM-dd")</td>
+                <td><span class="badge @UiHelpers.BadgeClass(a.Status.ToString())">@a.Status</span></td>
+                <td class="text-end"><a class="btn btn-outline-sb btn-sm" asp-action="ReviewApplication" asp-route-id="@a.Id">@(a.Status == ApplicationStatus.Pending ? "Review" : "View")</a></td>
+            </tr>
+        }
+        @if (!Model.Any()) { <tr><td colspan="5" class="text-muted">No applications.</td></tr> }
+        </tbody>
+    </table>
+</div>

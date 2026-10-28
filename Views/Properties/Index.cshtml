@@ -1,0 +1,96 @@
+@model PropertyListViewModel
+@{
+    ViewData["Title"] = "Explore stays";
+    var icons = new Dictionary<string, string>
+    {
+        ["Apartment"] = "bi-buildings", ["House"] = "bi-house-door", ["Villa"] = "bi-flower1", ["Cabin"] = "bi-tree",
+        ["Cottage"] = "bi-house-heart", ["Beachfront"] = "bi-umbrella", ["Studio"] = "bi-door-open"
+    };
+}
+
+<div class="sb-hero rounded-4 px-4">
+    <h1 class="h3 fw-semibold">Relax. Unwind. Choose your next stay.</h1>
+    <form method="get" asp-action="Index" class="row g-2 mt-2">
+        <input type="hidden" name="type" value="@Model.Type" />
+        <div class="col-md-6">
+            <select name="city" class="form-select" onchange="this.form.submit()">
+                <option value="">Anywhere in South Africa</option>
+                @foreach (var c in Model.Cities)
+                {
+                    <option value="@c" selected="@(c == Model.City)">@c</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto"><a class="btn btn-outline-secondary" asp-action="Index">Clear filters</a></div>
+    </form>
+</div>
+
+<div class="sb-chips">
+    <a class="sb-chip @(string.IsNullOrEmpty(Model.Type) ? "on" : "")" asp-action="Index" asp-route-city="@Model.City"><i class="bi bi-grid"></i>All</a>
+    @foreach (var t in PropertyTypes.All)
+    {
+        <a class="sb-chip @(Model.Type == t ? "on" : "")" asp-action="Index" asp-route-city="@Model.City" asp-route-type="@t"><i class="bi @icons[t]"></i>@t</a>
+    }
+</div>
+
+@if (!Model.Properties.Any())
+{
+    <div class="text-center text-muted py-5">
+        <i class="bi bi-house-slash display-4"></i>
+        <p class="mt-3">No stays match your search. Try a different city or property type.</p>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+        @foreach (var p in Model.Properties)
+        {
+            var liked = Model.WishlistIds.Contains(p.Id);
+            var pics = p.Images.OrderBy(i => i.Id).Take(5).ToList();
+            var rated = p.Reviews.Count > 0;
+            <div class="col">
+                <div class="sb-card">
+                    <div class="sb-card-img">
+                        @if (rated && p.AverageRating >= 4.7 && p.Reviews.Count >= 3) { <span class="sb-fav">Guest favourite</span> }
+                        <div id="car@(p.Id)" class="carousel slide" data-bs-interval="false">
+                            @if (pics.Count > 1)
+                            {
+                                <div class="carousel-indicators">
+                                    @for (var i = 0; i < pics.Count; i++) { <button type="button" data-bs-target="#car@(p.Id)" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button> }
+                                </div>
+                            }
+                            <div class="carousel-inner">
+                                @for (var i = 0; i < pics.Count; i++)
+                                {
+                                    <div class="carousel-item @(i == 0 ? "active" : "")"><a asp-action="Details" asp-route-id="@p.Id"><img src="@pics[i].ImageUrl" alt="@p.Title" loading="lazy" /></a></div>
+                                }
+                                @if (pics.Count == 0) { <div class="carousel-item active"><img src="@UiHelpers.Placeholder" alt="" /></div> }
+                            </div>
+                            @if (pics.Count > 1)
+                            {
+                                <button class="carousel-control-prev" type="button" data-bs-target="#car@(p.Id)" data-bs-slide="prev"><span class="carousel-control-prev-icon"></span></button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#car@(p.Id)" data-bs-slide="next"><span class="carousel-control-next-icon"></span></button>
+                            }
+                        </div>
+                        @if (User.IsInRole(AppRoles.Guest))
+                        {
+                            <form asp-action="ToggleWishlist" asp-route-id="@p.Id" method="post">
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <button type="submit" class="sb-heart @(liked ? "on" : "")" title="Wishlist"><i class="bi @(liked ? "bi-heart-fill" : "bi-heart")"></i></button>
+                            </form>
+                        }
+                    </div>
+                    <a asp-action="Details" asp-route-id="@p.Id" class="text-decoration-none text-dark">
+                        <div class="d-flex justify-content-between mt-2">
+                            <span class="fw-semibold text-truncate">@p.City, South Africa</span>
+                            <span class="small text-nowrap"><i class="bi bi-star-fill"></i> @(rated ? p.AverageRating.ToString("0.00") : "New")</span>
+                        </div>
+                        <div class="sb-card-meta text-truncate">@p.Title</div>
+                        <div class="sb-card-meta">@p.PropertyType &middot; hosted by @p.Host.FirstName</div>
+                        <div class="mt-1"><span class="fw-semibold">@UiHelpers.Rand(p.PricePerNight)</span> <span class="sb-card-meta">night</span></div>
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}

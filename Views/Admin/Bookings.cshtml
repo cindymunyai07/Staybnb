@@ -1,0 +1,15 @@
+@model List<Booking>
+@{ ViewData["Title"] = "All Bookings"; }
+<div class="sb-panel">
+    <table class="table table-sm mb-0">
+        <thead><tr><th>#</th><th>Guest</th><th>Property</th><th>Dates</th><th>Total</th><th>Status</th><th>Payment</th></tr></thead>
+        <tbody>
+        @foreach (var b in Model)
+        {
+            <tr><td>@b.Id</td><td>@b.Guest.FullName</td><td>@b.Property.Title</td><td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM yyyy")</td><td>@UiHelpers.Money(b.TotalPrice)</td>
+                <td><span class="badge @UiHelpers.BadgeClass(b.Status.ToString())">@b.Status</span></td>
+                <td>@if (b.Payment != null) { <span class="badge @UiHelpers.BadgeClass(b.Payment.Status.ToString())">@b.Payment.Status</span> }</td></tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,29 @@
+@model List<WishlistItem>
+@{ ViewData["Title"] = "Wishlist"; }
+<h1 class="h3 mb-3">Your wishlist</h1>
+@if (!Model.Any())
+{
+    <p class="text-muted">Nothing saved yet. <a asp-action="Index">Explore stays</a>.</p>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+        @foreach (var w in Model)
+        {
+            var p = w.Property;
+            <div class="col">
+                <div class="sb-card">
+                    <div class="sb-card-img">
+                        <a asp-action="Details" asp-route-id="@p.Id"><img src="@(p.Images.FirstOrDefault()?.ImageUrl ?? UiHelpers.Placeholder)" alt="@p.Title" /></a>
+                        <form asp-action="ToggleWishlist" asp-route-id="@p.Id" method="post">
+                            <input type="hidden" name="returnUrl" value="/Properties/Wishlist" />
+                            <button type="submit" class="sb-heart on" title="Remove"><i class="bi bi-heart-fill"></i></button>
+                        </form>
+                    </div>
+                    <p class="sb-card-title">@p.Title</p>
+                    <div class="sb-card-meta">@p.City &middot; @UiHelpers.Money(p.PricePerNight) per night</div>
+                </div>
+            </div>
+        }
+    </div>
+}

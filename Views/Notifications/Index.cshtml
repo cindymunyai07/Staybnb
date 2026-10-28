@@ -1,0 +1,45 @@
+@model NotificationsViewModel
+@{ ViewData["Title"] = "Notifications"; }
+<div class="sb-panel">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <div class="d-flex gap-2 align-items-center">
+            <h1 class="h5 mb-0">Notifications</h1>
+            @if (Model.UnreadCount > 0) { <span class="badge bg-danger">@Model.UnreadCount new</span> }
+        </div>
+        <form asp-action="MarkAllRead" method="post"><button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-check2-all"></i> Mark all read</button></form>
+    </div>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <a class="btn btn-sm @(string.IsNullOrEmpty(Model.Filter) ? "btn-sb" : "btn-outline-secondary")" asp-action="Index">All (@Model.AllCount)</a>
+        <a class="btn btn-sm @(Model.Filter == "unread" ? "btn-sb" : "btn-outline-secondary")" asp-action="Index" asp-route-filter="unread">Unread (@Model.UnreadCount)</a>
+        <a class="btn btn-sm @(Model.Filter == "read" ? "btn-sb" : "btn-outline-secondary")" asp-action="Index" asp-route-filter="read">Read (@Model.ReadCount)</a>
+        <a class="btn btn-sm @(Model.Filter == "today" ? "btn-sb" : "btn-outline-secondary")" asp-action="Index" asp-route-filter="today">Today (@Model.TodayCount)</a>
+    </div>
+    <div class="row g-0 border rounded-3 overflow-hidden">
+        <div class="col-md-5 border-end" style="max-height:520px;overflow:auto">
+            @foreach (var n in Model.Items)
+            {
+                <a class="sb-notif @(!n.IsRead ? "unread" : "") @(Model.Selected?.Id == n.Id ? "active" : "")" asp-action="Index" asp-route-selectedId="@n.Id" asp-route-filter="@Model.Filter">
+                    <div class="d-flex justify-content-between"><strong class="small">@n.Title</strong><span class="small text-muted">@UiHelpers.TimeAgo(n.CreatedAt)</span></div>
+                    <div class="small text-muted text-truncate">@n.Message</div>
+                </a>
+            }
+            @if (!Model.Items.Any()) { <div class="p-4 text-muted">You're all caught up.</div> }
+        </div>
+        <div class="col-md-7 p-4">
+            @if (Model.Selected == null)
+            {
+                <div class="text-muted text-center py-5"><i class="bi bi-bell display-5"></i><p>Select a notification to read it.</p></div>
+            }
+            else
+            {
+                <div class="d-flex justify-content-between"><h2 class="h6">@Model.Selected.Title</h2><span class="badge bg-success-subtle text-success-emphasis">Read</span></div>
+                <div class="small text-muted mb-3">@Model.Selected.CreatedAt.ToString("dd MMM yyyy HH:mm") &middot; @Model.Selected.Type</div>
+                <p>@Model.Selected.Message</p>
+                <div class="d-flex gap-2">
+                    @if (!string.IsNullOrEmpty(Model.Selected.Link) && Url.IsLocalUrl(Model.Selected.Link)) { <a class="btn btn-sb btn-sm" href="@Model.Selected.Link"><i class="bi bi-box-arrow-up-right"></i> Take action</a> }
+                    <form asp-action="Delete" asp-route-id="@Model.Selected.Id" method="post"><button class="btn btn-outline-danger btn-sm" type="submit"><i class="bi bi-trash"></i> Delete</button></form>
+                </div>
+            }
+        </div>
+    </div>
+</div>

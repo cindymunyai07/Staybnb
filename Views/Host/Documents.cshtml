@@ -1,0 +1,26 @@
+@model List<GuestDocument>
+@{ ViewData["Title"] = "Guest Documents"; }
+@if (!Model.Any()) { <p class="text-muted">No guest documents have been uploaded yet.</p> }
+@foreach (var d in Model)
+{
+    var b = d.GuestCheckIn.Booking;
+    <div class="sb-panel mb-2">
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+            <div class="flex-grow-1">
+                <div class="fw-semibold">@b.Guest.FullName <span class="text-muted fw-normal">&middot; @d.DocumentType</span></div>
+                <div class="small text-muted">@b.Property.Title &middot; @b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM") &middot; uploaded @UiHelpers.TimeAgo(d.UploadedAt)</div>
+                @if (!string.IsNullOrEmpty(d.ReviewNote)) { <div class="small">Note: @d.ReviewNote</div> }
+            </div>
+            <a class="btn btn-outline-secondary btn-sm" asp-controller="Files" asp-action="Document" asp-route-id="@d.Id" target="_blank"><i class="bi bi-eye"></i> Open</a>
+            <span class="badge @UiHelpers.BadgeClass(d.Status.ToString())">@d.Status</span>
+        </div>
+        @if (d.Status == DocumentStatus.Pending)
+        {
+            <form asp-action="VerifyDocument" asp-route-id="@d.Id" method="post" class="row g-2 mt-2">
+                <div class="col-md-6"><input name="note" class="form-control form-control-sm" maxlength="500" placeholder="Optional note to the guest" /></div>
+                <div class="col-auto"><button class="btn btn-success btn-sm" name="approve" value="true" type="submit"><i class="bi bi-check-lg"></i> Approve</button></div>
+                <div class="col-auto"><button class="btn btn-danger btn-sm" name="approve" value="false" type="submit"><i class="bi bi-x-lg"></i> Reject</button></div>
+            </form>
+        }
+    </div>
+}

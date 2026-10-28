@@ -1,0 +1,42 @@
+@model AdminDashboardViewModel
+@{ ViewData["Title"] = "Dashboard Overview"; }
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="lbl">Total Users</div><div class="num">@Model.TotalUsers</div><div class="small text-success">Registered accounts</div></div></div>
+    <div class="col-6 col-lg-3"><a class="text-decoration-none" asp-action="Applications" asp-route-status="Pending"><div class="sb-stat"><div class="lbl">Pending Host Apps</div><div class="num text-warning">@Model.PendingApplications</div><div class="small text-success">Require review</div></div></a></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="lbl">Active Properties</div><div class="num">@Model.ActiveProperties</div><div class="small text-success">Listings available</div></div></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="lbl">Platform Revenue</div><div class="num">@UiHelpers.Money(Model.PlatformRevenue)</div><div class="small text-success">Service fees earned</div></div></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="lbl">Total Bookings</div><div class="num">@Model.TotalBookings</div><div class="small text-success">@Model.PendingBookings pending</div></div></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="lbl">Approved Hosts</div><div class="num">@Model.ApprovedHosts</div><div class="small text-success">Active hosts</div></div></div>
+</div>
+<div class="sb-panel mb-4">
+    <div class="d-flex justify-content-between"><h2 class="h6">Recent Activity</h2><a asp-action="Logs" class="small">View all</a></div>
+    <table class="table table-sm mb-0">
+        <thead><tr><th>User</th><th>Action</th><th>Date</th></tr></thead>
+        <tbody>
+        @foreach (var l in Model.RecentActivity)
+        {
+            <tr><td>@(l.User?.FullName ?? "System")<div class="small text-muted">@l.User?.Email</div></td><td>@l.Action</td><td>@l.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td></tr>
+        }
+        </tbody>
+    </table>
+</div>
+<div class="row g-3">
+    <div class="col-lg-6"><div class="sb-panel">
+        <h2 class="h6">Recent Host Applications</h2>
+        <table class="table table-sm mb-0"><thead><tr><th>Applicant</th><th>Property</th><th>Status</th><th></th></tr></thead><tbody>
+        @foreach (var a in Model.RecentApplications)
+        {
+            <tr><td>@a.ApplicationUser.FullName</td><td>@a.Property.Title</td><td><span class="badge @UiHelpers.BadgeClass(a.Status.ToString())">@a.Status</span></td><td><a asp-action="ReviewApplication" asp-route-id="@a.Id"><i class="bi bi-eye"></i></a></td></tr>
+        }
+        </tbody></table>
+    </div></div>
+    <div class="col-lg-6"><div class="sb-panel">
+        <h2 class="h6">Recent Bookings</h2>
+        <table class="table table-sm mb-0"><thead><tr><th>Guest</th><th>Dates</th><th>Status</th></tr></thead><tbody>
+        @foreach (var b in Model.RecentBookings)
+        {
+            <tr><td>@b.Guest.FullName<div class="small text-muted">@b.Property.Title</div></td><td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM")</td><td><span class="badge @UiHelpers.BadgeClass(b.Status.ToString())">@b.Status</span></td></tr>
+        }
+        </tbody></table>
+    </div></div>
+</div>

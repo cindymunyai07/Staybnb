@@ -1,0 +1,301 @@
+@model PropertyDetailsViewModel
+@{
+    var p = Model.Property;
+    ViewData["Title"] = p.Title;
+    var imgs = p.Images.OrderBy(i => i.Id).Select(i => i.ImageUrl).ToList();
+    if (!imgs.Any()) { imgs.Add(UiHelpers.Placeholder); }
+    var inv = System.Globalization.CultureInfo.InvariantCulture;
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    var reviews = p.Reviews.OrderByDescending(r => r.CreatedAt).ToList();
+    var rated = reviews.Count > 0;
+    var avg = rated ? p.AverageRating : 0;
+    var rules = CheckInConfig.Parse(p.CheckInProcess?.StepsJson).Rules;
+    var months = Math.Max(1, (int)((DateTime.Now - p.Host.CreatedAt).TotalDays / 30));
+    var hosting = months >= 12 ? (months / 12) + (months / 12 == 1 ? " year" : " years") : months + (months == 1 ? " month" : " months");
+    var has = p.Amenities.Select(a => a.Name).ToHashSet();
+    var galleryClass = imgs.Count >= 5 ? "" : imgs.Count >= 2 ? "few" : "single";
+    var perRoom = Math.Max(1, p.Bedrooms);
+    var sleep = p.Beds;
+    var area = p.Address.Contains(',') ? p.Address.Split(',').Last().Trim() : p.City;
+}
+
+<h1 class="h3 fw-semibold mb-1">@p.Title</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="small">
+        @if (rated) { <span><i class="bi bi-star-fill"></i> <strong>@avg.ToString("0.00")</strong> &middot; <a href="#reviews" class="text-dark">@reviews.Count review@(reviews.Count == 1 ? "" : "s")</a> &middot; </span> }
+        <strong>@p.City, South Africa</strong>
+        @if (!(p.IsActive && p.IsApproved)) { <span class="badge bg-warning text-dark ms-2">Preview: @(p.IsApproved ? "inactive" : "awaiting approval")</span> }
+    </div>
+    @if (Model.IsGuest)
+    {
+        <form asp-action="ToggleWishlist" asp-route-id="@p.Id" method="post">
+            <button class="btn btn-link text-dark text-decoration-underline p-0" type="submit"><i class="bi @(Model.IsWishlisted ? "bi-heart-fill text-sb" : "bi-heart")"></i> @(Model.IsWishlisted ? "Saved" : "Save")</button>
+        </form>
+    }
+</div>
+
+<div class="sb-gallery mb-4 @galleryClass">
+    <img src="@imgs[0]" alt="@p.Title" data-bs-toggle="modal" data-bs-target="#photos" />
+    @if (imgs.Count >= 5)
+    {
+        <div class="side">@for (var i = 1; i <= 4; i++) { <img src="@imgs[i]" alt="" data-bs-toggle="modal" data-bs-target="#photos" /> }</div>
+    }
+    else if (imgs.Count > 1)
+    {
+        <div class="side">@for (var i = 1; i < Math.Min(3, imgs.Count); i++) { <img src="@imgs[i]" alt="" data-bs-toggle="modal" data-bs-target="#photos" /> }</div>
+    }
+    <button type="button" class="sb-show-all" data-bs-toggle="modal" data-bs-target="#photos"><i class="bi bi-grid-3x3-gap"></i> Show all photos</button>
+</div>
+
+<div class="modal fade" id="photos" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title h6">@p.Title</h2><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">@foreach (var u in imgs) { <img class="sb-modal-img" src="@u" alt="" loading="lazy" /> }</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-5">
+    <div class="col-lg-7">
+        <div class="sb-section pt-0 d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">Entire @p.PropertyType.ToLower() in @p.City</h2>
+                <div class="text-muted">@p.MaxGuests guests &middot; @p.Bedrooms bedroom@(p.Bedrooms == 1 ? "" : "s") &middot; @p.Beds bed@(p.Beds == 1 ? "" : "s") &middot; @p.Bathrooms bath@(p.Bathrooms == 1 ? "" : "s")</div>
+            </div>
+            <span class="sb-avatar" style="width:52px;height:52px;font-size:1.2rem">@p.Host.FirstName.Substring(0, 1)</span>
+        </div>
+
+        <div class="sb-section">
+            <div class="sb-hl"><i class="bi bi-door-open"></i><div><div class="fw-semibold">Self check-in</div><div class="text-muted small">Complete your check-in online and upload your ID before you arrive.</div></div></div>
+            <div class="sb-hl"><i class="bi bi-calendar-x"></i><div><div class="fw-semibold">Free cancellation</div><div class="text-muted small">Cancel before check-in for a full refund.</div></div></div>
+            @if (has.Contains("Workspace")) { <div class="sb-hl"><i class="bi bi-laptop"></i><div><div class="fw-semibold">Dedicated workspace</div><div class="text-muted small">A room with wifi that suits working remotely.</div></div></div> }
+            else if (has.Contains("Pool")) { <div class="sb-hl"><i class="bi bi-water"></i><div><div class="fw-semibold">Private pool</div><div class="text-muted small">Cool off in the pool whenever you like.</div></div></div> }
+            else { <div class="sb-hl"><i class="bi bi-patch-check"></i><div><div class="fw-semibold">Verified host</div><div class="text-muted small">@p.Host.FirstName's listing was reviewed and approved by Staybnb.</div></div></div> }
+        </div>
+
+        <div class="sb-section"><p style="white-space:pre-line" class="mb-0">@p.Description</p></div>
+
+        <div class="sb-section">
+            <h2>Where you'll sleep</h2>
+            <div class="row g-3">
+                @for (var r = 1; r <= Math.Min(3, perRoom); r++)
+                {
+                    var beds = sleep / perRoom + (r <= sleep % perRoom ? 1 : 0);
+                    <div class="col-6 col-md-4">
+                        <div class="sb-bed">
+                            <img src="@(imgs.Count > 2 ? imgs[2] : imgs[0])" alt="" />
+                            <div class="p-2"><div class="fw-semibold small">Bedroom @r</div><div class="text-muted small">@Math.Max(1, beds) bed@(beds > 1 ? "s" : "")</div></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <h2>What this place offers</h2>
+            <div class="row">
+                @foreach (var a in p.Amenities) { <div class="col-6 sb-amenity"><i class="bi @a.IconClass me-3 fs-5"></i>@a.Name</div> }
+                @if (!p.Amenities.Any()) { <div class="text-muted">No amenities listed.</div> }
+            </div>
+        </div>
+
+        <div class="sb-section" id="reviews">
+            <h2><i class="bi bi-star-fill"></i> @(rated ? avg.ToString("0.00") + " \u00b7 " + reviews.Count + " review" + (reviews.Count == 1 ? "" : "s") : "No reviews yet")</h2>
+            @if (rated)
+            {
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        @for (var star = 5; star >= 1; star--)
+                        {
+                            var n = reviews.Count(r => r.Rating == star);
+                            <div class="d-flex align-items-center gap-2 small mb-1"><span style="width:12px">@star</span><div class="sb-bar"><span style="width:@((n * 100 / reviews.Count))%"></span></div><span class="text-muted" style="width:24px">@n</span></div>
+                        }
+                    </div>
+                </div>
+            }
+            @if (Model.CanReview)
+            {
+                <form asp-action="AddReview" method="post" class="sb-panel mb-3">
+                    <input type="hidden" name="propertyId" value="@p.Id" />
+                    <div class="row g-2">
+                        <div class="col-md-3"><select name="rating" class="form-select">@for (var i = 5; i >= 1; i--) { <option value="@i">@i star@(i > 1 ? "s" : "")</option> }</select></div>
+                        <div class="col-md-7"><input name="comment" class="form-control" maxlength="1000" placeholder="How was your stay?" /></div>
+                        <div class="col-md-2"><button class="btn btn-sb w-100" type="submit">Post</button></div>
+                    </div>
+                </form>
+            }
+            <div class="row g-4">
+                @foreach (var r in reviews.Take(6))
+                {
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="sb-avatar" style="width:40px;height:40px">@r.Reviewer.FirstName.Substring(0, 1)</span>
+                            <div><div class="fw-semibold">@r.Reviewer.FirstName</div><div class="small text-muted">@r.CreatedAt.ToString("MMMM yyyy")</div></div>
+                        </div>
+                        <div class="small mb-1">@for (var i = 0; i < r.Rating; i++) { <i class="bi bi-star-fill"></i> }</div>
+                        @if (!string.IsNullOrWhiteSpace(r.Comment)) { <div>@r.Comment</div> }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="sb-section">
+            <h2>Where you'll be</h2>
+            <p class="mb-2">@p.Address, @p.City</p>
+            <div id="map" class="sb-map" data-city="@p.City" data-area="@area"></div>
+            <p class="small text-muted mt-2 mb-0">The exact address is shared once your booking is approved.</p>
+        </div>
+
+        <div class="sb-section">
+            <h2>Meet your host</h2>
+            <div class="sb-panel d-flex gap-4 align-items-center">
+                <div class="text-center">
+                    <span class="sb-avatar" style="width:84px;height:84px;font-size:2rem">@p.Host.FirstName.Substring(0, 1)</span>
+                    <div class="fw-bold mt-2">@p.Host.FirstName</div>
+                    @if (Model.IsSuperhost) { <span class="sb-superhost"><i class="bi bi-award"></i> Superhost</span> } else { <span class="small text-muted">Host</span> }
+                </div>
+                <div>
+                    <div><strong>@Model.HostReviewCount</strong> <span class="small text-muted">reviews</span></div>
+                    <div><strong>@(Model.HostReviewCount > 0 ? Model.HostRating.ToString("0.0") : "-")</strong> <i class="bi bi-star-fill small"></i> <span class="small text-muted">rating</span></div>
+                    <div><strong>@hosting</strong> <span class="small text-muted">hosting</span></div>
+                </div>
+                @if (Model.IsGuest)
+                {
+                    <a class="btn btn-outline-dark ms-auto" asp-controller="Messages" asp-action="Compose" asp-route-to="@p.HostId">Message host</a>
+                }
+            </div>
+        </div>
+
+        <div class="sb-section border-0">
+            <h2>Things to know</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="fw-semibold mb-2">House rules</div>
+                    <div class="small text-muted mb-1">Check-in after 14:00</div>
+                    <div class="small text-muted mb-1">Check-out before 10:00</div>
+                    <div class="small text-muted mb-1">@p.MaxGuests guests maximum</div>
+                    @foreach (var rule in rules.Take(4)) { <div class="small text-muted mb-1">@rule</div> }
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-semibold mb-2">Safety &amp; property</div>
+                    <div class="small text-muted mb-1">Guest ID is checked by the host at check-in</div>
+                    <div class="small text-muted mb-1">Payments are refunded if the host declines</div>
+                </div>
+                <div class="col-md-4">
+                    <div class="fw-semibold mb-2">Cancellation policy</div>
+                    <div class="small text-muted">Cancel any time before check-in for a full refund. Once you are checked in the stay can no longer be cancelled.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="sb-booking-box">
+            <div class="d-flex justify-content-between align-items-baseline mb-3">
+                <div><span class="fs-4 fw-semibold">@UiHelpers.Rand(p.PricePerNight)</span> <span class="text-muted">night</span></div>
+                @if (rated) { <span class="small"><i class="bi bi-star-fill"></i> @avg.ToString("0.00") &middot; <a href="#reviews" class="text-muted">@reviews.Count reviews</a></span> }
+            </div>
+            @if (Model.IsGuest)
+            {
+                <form method="get" asp-controller="Bookings" asp-action="Checkout">
+                    <input type="hidden" name="propertyId" value="@p.Id" />
+                    <div class="border rounded-3 mb-3">
+                        <div class="row g-0">
+                            <div class="col-6 p-2 border-end"><label class="small fw-bold d-block">CHECK-IN</label><input type="date" id="checkIn" name="checkIn" class="form-control form-control-sm border-0 p-0" min="@today" required /></div>
+                            <div class="col-6 p-2"><label class="small fw-bold d-block">CHECKOUT</label><input type="date" id="checkOut" name="checkOut" class="form-control form-control-sm border-0 p-0" min="@today" required /></div>
+                        </div>
+                        <div class="p-2 border-top"><label class="small fw-bold d-block">GUESTS (max @p.MaxGuests)</label><input type="number" name="guests" class="form-control form-control-sm border-0 p-0" value="1" min="1" max="@p.MaxGuests" required /></div>
+                    </div>
+                    <button type="submit" class="btn btn-sb w-100 py-2">Reserve</button>
+                    <div class="text-center small text-muted mt-2">Payment is taken on the next step</div>
+                </form>
+                <div id="priceBox" class="d-none mt-3 small">
+                    <div class="d-flex justify-content-between"><span id="pNights"></span><span id="pSub"></span></div>
+                    <div class="d-flex justify-content-between"><span>Cleaning fee</span><span id="pClean"></span></div>
+                    <div class="d-flex justify-content-between"><span>Service fee</span><span id="pService"></span></div>
+                    <hr />
+                    <div class="d-flex justify-content-between fw-bold"><span>Total</span><span id="pTotal"></span></div>
+                </div>
+            }
+            else if (!User.Identity.IsAuthenticated)
+            {
+                <a class="btn btn-sb w-100 py-2" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Context.Request.Path">Log in to book</a>
+            }
+            else
+            {
+                <div class="alert alert-light border mb-0 small">You are viewing a preview. Only Guest accounts can book stays.</div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        (function () {
+            var el = document.getElementById('map');
+            if (!el || !window.L) return;
+            var map = L.map(el, { scrollWheelZoom: false }).setView([-29, 24.5], 5);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            function locate(query, next) {
+                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=za&q=' + encodeURIComponent(query))
+                    .then(function (r) { return r.json(); })
+                    .then(function (hits) {
+                        if (hits && hits.length) { mark(parseFloat(hits[0].lat), parseFloat(hits[0].lon)); }
+                        else if (next) { next(); }
+                    })
+                    .catch(function () { if (next) next(); });
+            }
+            function mark(lat, lon) {
+                map.setView([lat, lon], 14);
+                L.circle([lat, lon], { radius: 450, color: '#ff385c', fillColor: '#ff385c', fillOpacity: 0.2 }).addTo(map);
+            }
+            locate(el.dataset.area + ', ' + el.dataset.city + ', South Africa', function () {
+                locate(el.dataset.city + ', South Africa');
+            });
+        })();
+    </script>
+    @if (Model.IsGuest)
+    {
+        <script>
+            (function () {
+                var price = @p.PricePerNight.ToString("0.00", inv);
+                var cleaning = @p.CleaningFee.ToString("0.00", inv);
+                var checkIn = document.getElementById('checkIn');
+                var checkOut = document.getElementById('checkOut');
+                function fmt(v) { return 'R ' + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+                function calc() {
+                    var box = document.getElementById('priceBox');
+                    if (!checkIn.value || !checkOut.value) { box.classList.add('d-none'); return; }
+                    var n = Math.round((new Date(checkOut.value) - new Date(checkIn.value)) / 86400000);
+                    if (n < 1) { box.classList.add('d-none'); return; }
+                    var sub = price * n, svc = Math.round(sub * 0.12 * 100) / 100;
+                    document.getElementById('pNights').textContent = fmt(price) + ' x ' + n + ' night' + (n > 1 ? 's' : '');
+                    document.getElementById('pSub').textContent = fmt(sub);
+                    document.getElementById('pClean').textContent = fmt(cleaning);
+                    document.getElementById('pService').textContent = fmt(svc);
+                    document.getElementById('pTotal').textContent = fmt(sub + cleaning + svc);
+                    box.classList.remove('d-none');
+                }
+                checkIn.addEventListener('change', function () {
+                    if (checkIn.value) {
+                        var d = new Date(checkIn.value); d.setDate(d.getDate() + 1);
+                        checkOut.min = d.toISOString().slice(0, 10);
+                        if (checkOut.value && checkOut.value < checkOut.min) { checkOut.value = ''; }
+                    }
+                    calc();
+                });
+                checkOut.addEventListener('change', calc);
+            })();
+        </script>
+    }
+}

@@ -1,0 +1,27 @@
+@model CheckInProcessViewModel
+@{ ViewData["Title"] = "Check-in process"; }
+<div class="row"><div class="col-lg-8">
+<div class="sb-panel">
+    <h2 class="h5">@Model.PropertyTitle</h2>
+    <p class="text-muted small">Define the rules and the documents guests must provide when checking in to this property.</p>
+    <form asp-action="ConfigureCheckIn" method="post">
+        <input type="hidden" asp-for="PropertyId" />
+        <div asp-validation-summary="All" class="text-danger small"></div>
+        <div class="mb-3"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" /></div>
+        <div class="mb-3"><label asp-for="Instructions" class="form-label">Welcome message / arrival instructions</label><textarea asp-for="Instructions" class="form-control" rows="2"></textarea></div>
+        <div class="mb-3"><label asp-for="RulesText" class="form-label"></label><textarea asp-for="RulesText" class="form-control" rows="6"></textarea></div>
+        <div class="mb-3">
+            <label class="form-label">Accepted documents (guest uploads one)</label>
+            @foreach (var d in CheckInConfig.DocumentOptions)
+            {
+                var did = "doc-" + d.Replace(" ", "");
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="RequiredDocuments" value="@d" id="@did" checked="@Model.RequiredDocuments.Contains(d)" />
+                    <label class="form-check-label" for="@did">@d</label>
+                </div>
+            }
+        </div>
+        <button class="btn btn-sb" type="submit">Save</button>
+        <a class="btn btn-outline-secondary" asp-action="Properties">Cancel</a>
+    </form>
+</div></div></div>

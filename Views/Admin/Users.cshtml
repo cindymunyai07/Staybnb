@@ -1,0 +1,31 @@
+@model List<UserRowViewModel>
+@{ ViewData["Title"] = "User Management"; }
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-5"><input name="q" value="@ViewBag.Search" class="form-control" placeholder="Search by name or email" /></div>
+    <div class="col-auto"><button class="btn btn-sb" type="submit"><i class="bi bi-search"></i> Search</button></div>
+</form>
+<div class="sb-panel">
+    <table class="table mb-0">
+        <thead><tr><th>User</th><th>Roles</th><th>Joined</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var r in Model)
+        {
+            <tr>
+                <td>@r.User.FullName<div class="small text-muted">@r.User.Email</div></td>
+                <td>@foreach (var role in r.Roles) { <span class="badge bg-light text-dark border">@role</span> }</td>
+                <td>@r.User.CreatedAt.ToString("yyyy-MM-dd")</td>
+                <td class="text-end">
+                    @if (r.Roles.Contains(AppRoles.Guest))
+                    {
+                        <form asp-action="PromoteToAdmin" asp-route-id="@r.User.Id" method="post" onsubmit="return confirm('Promote this Guest to Admin?');"><button class="btn btn-outline-sb btn-sm" type="submit"><i class="bi bi-arrow-up-circle"></i> Promote to Admin</button></form>
+                    }
+                    else if (r.Roles.Contains(AppRoles.Admin) && !r.Roles.Contains(AppRoles.SuperAdmin))
+                    {
+                        <form asp-action="DemoteAdmin" asp-route-id="@r.User.Id" method="post" onsubmit="return confirm('Demote this Admin to Guest?');"><button class="btn btn-outline-secondary btn-sm" type="submit">Demote to Guest</button></form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,11 @@
+@model List<Review>
+@{ ViewData["Title"] = "Reviews"; }
+@if (!Model.Any()) { <p class="text-muted">No reviews yet.</p> }
+@foreach (var r in Model)
+{
+    <div class="sb-panel mb-2">
+        <div class="d-flex justify-content-between"><strong>@r.Reviewer.FullName</strong><span class="sb-star">@for (var i = 0; i < r.Rating; i++) { <i class="bi bi-star-fill"></i> }</span></div>
+        <div class="small text-muted">@r.Property.Title &middot; @r.CreatedAt.ToString("dd MMM yyyy")</div>
+        <div>@r.Comment</div>
+    </div>
+}

@@ -1,0 +1,11 @@
+@model PropertyFormViewModel
+@{ ViewData["Title"] = "Edit property"; ViewData["RequireImages"] = false; }
+<div class="sb-panel">
+    <form asp-action="EditProperty" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data">
+        <partial name="_PropertyFields" model="Model" view-data="ViewData" />
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-sb px-4">Save changes</button>
+            <a class="btn btn-outline-secondary" asp-action="Properties">Cancel</a>
+        </div>
+    </form>
+</div>

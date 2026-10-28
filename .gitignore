@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+PrivateUploads/
+wwwroot/uploads/properties/*
+!wwwroot/uploads/properties/.gitkeep
+PrivateUploads/
+*.mdf
+*.ldf
+Documentation/*.pdf

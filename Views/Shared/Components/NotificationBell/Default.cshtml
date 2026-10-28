@@ -1,0 +1,9 @@
+@model NotificationBellViewModel
+<a class="sb-icon-btn" asp-controller="Messages" asp-action="Inbox" title="Messages">
+    <i class="bi bi-envelope-fill"></i>
+    @if (Model.UnreadMessages > 0) { <span class="sb-badge">@Model.UnreadMessages</span> }
+</a>
+<a class="sb-icon-btn" asp-controller="Notifications" asp-action="Index" title="Notifications">
+    <i class="bi bi-bell-fill"></i>
+    @if (Model.UnreadNotifications > 0) { <span class="sb-badge">@Model.UnreadNotifications</span> }
+</a>

@@ -1,0 +1,18 @@
+@model ThreadViewModel
+@{ ViewData["Title"] = "Conversation"; var me = User.GetUserId(); }
+<div class="d-flex align-items-center mb-3 gap-2">
+    <a asp-action="Inbox" class="btn btn-outline-secondary btn-sm">&larr;</a>
+    <h1 class="h5 mb-0">@Model.Other.FullName</h1>
+</div>
+<div class="sb-panel mb-3" style="min-height:260px">
+    @foreach (var m in Model.Messages)
+    {
+        <div class="d-flex"><div class="sb-msg @(m.SenderId == me ? "me" : "them")">@m.Content<div class="small opacity-75">@m.Timestamp.ToString("dd MMM HH:mm")</div></div></div>
+    }
+    @if (!Model.Messages.Any()) { <p class="text-muted">No messages yet. Say hello!</p> }
+</div>
+<form asp-action="Send" method="post" class="d-flex gap-2">
+    <input type="hidden" name="ReceiverId" value="@Model.Other.Id" />
+    <input name="Content" class="form-control" maxlength="2000" placeholder="Write a reply..." required />
+    <button class="btn btn-sb" type="submit"><i class="bi bi-send"></i></button>
+</form>

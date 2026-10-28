@@ -1,0 +1,18 @@
+@model List<HostProperty>
+@{ ViewData["Title"] = "All Properties"; }
+<div class="sb-panel">
+    <table class="table mb-0">
+        <thead><tr><th>Property</th><th>Host</th><th>City</th><th>Price</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td><div class="d-flex gap-2 align-items-center"><img class="sb-thumb" style="width:56px;height:42px" src="@(p.Images.FirstOrDefault()?.ImageUrl ?? UiHelpers.Placeholder)" alt="" /><a asp-controller="Properties" asp-action="Details" asp-route-id="@p.Id">@p.Title</a></div></td>
+                <td>@p.Host.FullName</td><td>@p.City</td><td>@UiHelpers.Money(p.PricePerNight)</td>
+                <td>@if (!p.IsApproved) { <span class="badge bg-warning text-dark">Pending</span> } else if (p.IsActive) { <span class="badge bg-success">Active</span> } else { <span class="badge bg-secondary">Inactive</span> }</td>
+                <td class="text-end">@if (p.IsApproved) { <form asp-action="ToggleProperty" asp-route-id="@p.Id" method="post"><button class="btn btn-sm @(p.IsActive ? "btn-outline-danger" : "btn-outline-success")" type="submit">@(p.IsActive ? "Deactivate" : "Activate")</button></form> }</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,34 @@
+@model HostDashboardViewModel
+@{ ViewData["Title"] = "Host Dashboard"; }
+<div class="sb-panel mb-4">
+    <h2 class="h5 text-sb">Welcome back, @Model.HostName!</h2>
+    <p class="text-muted small">Here's what's happening with your properties today.</p>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-sb btn-sm" asp-controller="HostApplication" asp-action="Create"><i class="bi bi-plus-lg"></i> Add New Property</a>
+        <a class="btn btn-outline-sb btn-sm" asp-action="Bookings"><i class="bi bi-calendar-check"></i> View Booking Requests</a>
+        <a class="btn btn-outline-sb btn-sm" asp-action="Earnings"><i class="bi bi-graph-up"></i> View Earnings Report</a>
+    </div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="icon"><i class="bi bi-house-fill"></i></div><div class="num">@Model.TotalProperties</div><div class="lbl">Total Properties (@Model.ActiveProperties active)</div></div></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="icon"><i class="bi bi-calendar-check"></i></div><div class="num">@Model.TotalBookings</div><div class="lbl">Total Bookings (@Model.BookingsThisMonth this month)</div></div></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="icon"><i class="bi bi-cash-stack"></i></div><div class="num">@UiHelpers.Money(Model.TotalEarnings)</div><div class="lbl">Total Earnings</div></div></div>
+    <div class="col-6 col-lg-3"><div class="sb-stat"><div class="icon"><i class="bi bi-star-fill"></i></div><div class="num">@Model.AverageRating.ToString("0.0")</div><div class="lbl">Average Rating (@Model.ReviewCount reviews)</div></div></div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-6"><a class="text-decoration-none" asp-action="Bookings"><div class="sb-stat"><div class="num text-sb">@Model.PendingRequests</div><div class="lbl">Pending booking requests</div></div></a></div>
+    <div class="col-md-6"><a class="text-decoration-none" asp-action="Documents"><div class="sb-stat"><div class="num text-sb">@Model.PendingDocuments</div><div class="lbl">Guest documents awaiting verification</div></div></a></div>
+</div>
+<div class="sb-panel">
+    <h2 class="h6">Recent bookings</h2>
+    <table class="table table-sm mb-0">
+        <thead><tr><th>Guest</th><th>Property</th><th>Dates</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>
+        @foreach (var b in Model.RecentBookings)
+        {
+            <tr><td>@b.Guest.FullName</td><td>@b.Property.Title</td><td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM")</td><td>@UiHelpers.Money(b.TotalPrice)</td><td><span class="badge @UiHelpers.BadgeClass(b.Status.ToString())">@b.Status</span></td></tr>
+        }
+        @if (!Model.RecentBookings.Any()) { <tr><td colspan="5" class="text-muted">No bookings yet.</td></tr> }
+        </tbody>
+    </table>
+</div>

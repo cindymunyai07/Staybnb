@@ -1,0 +1,68 @@
+@model CheckoutViewModel
+@{ ViewData["Title"] = "Confirm and pay"; var p = Model.Property; var pr = Model.Price; }
+<h1 class="h3 mb-4">Confirm and pay</h1>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form asp-action="Checkout" method="post" class="sb-panel">
+            <input type="hidden" name="PropertyId" value="@Model.PropertyId" />
+            <input type="hidden" name="CheckIn" value="@Model.CheckIn.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="CheckOut" value="@Model.CheckOut.ToString("yyyy-MM-dd")" />
+            <input type="hidden" name="Guests" value="@Model.Guests" />
+
+            <div asp-validation-summary="All" class="alert alert-danger py-2 small"></div>
+
+            <h2 class="h5">Pay with card</h2>
+            <div class="alert alert-info small">
+                <i class="bi bi-info-circle"></i> This is a <strong>simulated</strong> payment. No bank details are verified and no money moves.
+                Use any card number with 13&ndash;19 digits (e.g. 4242 4242 4242 4242), a future expiry and any CVV.
+            </div>
+            <div class="mb-3">
+                <label asp-for="CardholderName" class="form-label"></label>
+                <input asp-for="CardholderName" class="form-control" />
+                <span asp-validation-for="CardholderName" class="text-danger small"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="CardNumber" class="form-label"></label>
+                <input asp-for="CardNumber" class="form-control" inputmode="numeric" placeholder="4242 4242 4242 4242" />
+                <span asp-validation-for="CardNumber" class="text-danger small"></span>
+            </div>
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <label asp-for="Expiry" class="form-label"></label>
+                    <input asp-for="Expiry" class="form-control" placeholder="MM/YY" maxlength="5" />
+                    <span asp-validation-for="Expiry" class="text-danger small"></span>
+                </div>
+                <div class="col-6 mb-3">
+                    <label asp-for="Cvv" class="form-label"></label>
+                    <input asp-for="Cvv" class="form-control" inputmode="numeric" maxlength="4" />
+                    <span asp-validation-for="Cvv" class="text-danger small"></span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Amount" class="form-label">Amount to pay (R) &ndash; must equal the total of @UiHelpers.Money(pr.Total)</label>
+                <input asp-for="Amount" type="number" step="0.01" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger small"></span>
+            </div>
+            <button type="submit" class="btn btn-sb w-100 py-2">Pay @UiHelpers.Money(pr.Total) and request to book</button>
+        </form>
+    </div>
+    <div class="col-lg-5">
+        <div class="sb-panel">
+            <div class="d-flex gap-3 mb-3">
+                <img class="sb-thumb" src="@(p.Images.FirstOrDefault()?.ImageUrl ?? UiHelpers.Placeholder)" alt="" />
+                <div><div class="fw-semibold">@p.Title</div><div class="small text-muted">@p.City &middot; @p.PropertyType</div></div>
+            </div>
+            <div class="small mb-3">
+                <i class="bi bi-calendar-event"></i> @Model.CheckIn.ToString("dd MMM yyyy") &rarr; @Model.CheckOut.ToString("dd MMM yyyy")<br />
+                <i class="bi bi-people"></i> @Model.Guests guest@(Model.Guests > 1 ? "s" : "")
+            </div>
+            <hr />
+            <div class="d-flex justify-content-between"><span>@UiHelpers.Money(pr.PricePerNight) x @pr.Nights night@(pr.Nights > 1 ? "s" : "")</span><span>@UiHelpers.Money(pr.Subtotal)</span></div>
+            <div class="d-flex justify-content-between"><span>Cleaning fee</span><span>@UiHelpers.Money(pr.CleaningFee)</span></div>
+            <div class="d-flex justify-content-between"><span>Service fee (12%)</span><span>@UiHelpers.Money(pr.ServiceFee)</span></div>
+            <hr />
+            <div class="d-flex justify-content-between fw-bold fs-5"><span>Total</span><span>@UiHelpers.Money(pr.Total)</span></div>
+            <p class="small text-muted mt-3 mb-0">If the host declines or you cancel while the booking is pending or approved, your payment is refunded.</p>
+        </div>
+    </div>
+</div>

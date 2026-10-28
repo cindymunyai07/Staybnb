@@ -1,0 +1,15 @@
+@model List<Booking>
+@{ ViewData["Title"] = "Earnings"; var total = Model.Sum(b => b.TotalPrice - b.ServiceFee); }
+<div class="sb-stat mb-3" style="max-width:320px"><div class="icon"><i class="bi bi-cash-stack"></i></div><div class="num">@UiHelpers.Money(total)</div><div class="lbl">Total earnings (after the 12% service fee)</div></div>
+<div class="sb-panel">
+    <table class="table table-sm mb-0">
+        <thead><tr><th>Property</th><th>Guest</th><th>Dates</th><th>Status</th><th class="text-end">Payout</th></tr></thead>
+        <tbody>
+        @foreach (var b in Model)
+        {
+            <tr><td>@b.Property.Title</td><td>@b.Guest.FullName</td><td>@b.CheckInDate.ToString("dd MMM") &rarr; @b.CheckOutDate.ToString("dd MMM")</td><td><span class="badge @UiHelpers.BadgeClass(b.Status.ToString())">@b.Status</span></td><td class="text-end">@UiHelpers.Money(b.TotalPrice - b.ServiceFee)</td></tr>
+        }
+        @if (!Model.Any()) { <tr><td colspan="5" class="text-muted">No earnings yet.</td></tr> }
+        </tbody>
+    </table>
+</div>

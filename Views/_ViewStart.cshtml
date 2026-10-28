@@ -1,0 +1,3 @@
+@{
+    Layout = (User.IsInRole("Host") || User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) ? "_DashboardLayout" : "_Layout";
+}
