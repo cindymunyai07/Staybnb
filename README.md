@@ -22,7 +22,33 @@ Staybnb covers the full marketplace lifecycle. A visitor registers as a **Guest*
 
 ## Screenshots
 
-[Add 4 to 6 of your own screenshots here: home page, property details with booking panel, host dashboard, admin dashboard, notifications.]
+## Screenshots
+
+### Home page
+<img width="700" alt="Staybnb home page showing the property gallery" src="https://github.com/user-attachments/assets/a8e44d4e-e5c7-4277-a22b-0d15ec97d8bc" />
+
+*Property gallery with search and filters*
+
+### Property details
+<img width="700" alt="What the place offers" src="https://github.com/user-attachments/assets/7629509b-8a5a-4066-99c4-ff7c91b1617e" />
+
+*Property page showing what the place offers*
+
+### Payment
+<img width="700" alt="Payment details" src="https://github.com/user-attachments/assets/ec35fe63-279d-4986-8395-9626f2459fd9" />
+
+*Payment details for a booking (the payment is simulated)*
+
+### Host application
+<img width="700" alt="Host Application" src="https://github.com/user-attachments/assets/c75c7066-6c1b-4e04-af87-f1af82004143" />
+
+*Guests apply to become hosts with property details and images*
+
+### Notifications
+<img width="700" alt="Notification" src="https://github.com/user-attachments/assets/346774ee-ab77-43f6-a53f-da7d54fc7b25" />
+
+*Notification centre with read and unread status*
+
 
 ## 1. Run it
 
